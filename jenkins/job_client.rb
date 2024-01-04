@@ -6,8 +6,8 @@ module Jenkins
 
     attr_reader :async_mode, :jenkins_url, :jenkins_user, :jenkins_token, :proxy, :job_name, :job_params, :job_timeout
 
-    DEFAULT_TIMEOUT = 30
-    INTERVAL_SECONDS = 10
+    DEFAULT_TIMEOUT = 90
+    INTERVAL_SECONDS = 60
 
     def initialize(args)
       @jenkins_url = args['INPUT_JENKINS_URL'].chomp('/')
@@ -93,16 +93,19 @@ module Jenkins
       job_log_url = "#{job_run_url}logText/progressiveText"
       build_response = nil
       build_result = nil
+      building = true
       timeout_countdown = job_timeout
-      while build_result.nil? and timeout_countdown > 0
+      while building == true and build_result.nil? and timeout_countdown > 0
         begin
             build_response = perform_request(job_progress_url, :get)
-            result = JSON.parse(build_response)['result']
+            parsed_json = JSON.parse(build_response)
+            result = parsed_json['result']
+            building = parsed_json['building']
             build_result = result || build_result
         rescue
             # "NOOP"
         end
-        if build_result.nil?
+        if build_result.nil? or building == true
             timeout_countdown = timeout_countdown - sleep(INTERVAL_SECONDS)
         elsif build_result == 'ABORTED'
           fail!('JOB ABORTED')
