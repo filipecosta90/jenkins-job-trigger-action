@@ -112,7 +112,7 @@ module Jenkins
         end
         if build_result.nil? or building == true
             time = Time.new
-            puts time.inspect + "... Still building... waiting for " + INTERVAL_SECONDS + " seconds..."
+            puts time.inspect + "... Still building... waiting for " + INTERVAL_SECONDS.to_s + " seconds..."
             timeout_countdown = timeout_countdown - sleep(INTERVAL_SECONDS)
         elsif build_result == 'ABORTED'
           fail!('JOB ABORTED')
