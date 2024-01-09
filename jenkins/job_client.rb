@@ -95,22 +95,34 @@ module Jenkins
       build_result = nil
       building = true
       timeout_countdown = job_timeout
-      while building == true and build_result.nil? and timeout_countdown > 0
+      time = Time.new
+      puts "Time of checking job progress : " + time.inspect
+      while building == true and timeout_countdown > 0
         begin
             build_response = perform_request(job_progress_url, :get)
             parsed_json = JSON.parse(build_response)
             result = parsed_json['result']
             building = parsed_json['building']
             build_result = result || build_result
+            # log the status after check
+            time = Time.new
+            puts time.inspect + ". Job status 'result' : " + result + ". 'building' : " + building
         rescue
             # "NOOP"
         end
         if build_result.nil? or building == true
+            time = Time.new
+            puts time.inspect + "... Still building... waiting for " + INTERVAL_SECONDS + " seconds..."
             timeout_countdown = timeout_countdown - sleep(INTERVAL_SECONDS)
         elsif build_result == 'ABORTED'
           fail!('JOB ABORTED')
         end
       end
+      time = Time.new
+      puts time.inspect + "... Finished waiting for job status..."
+      build_response = perform_request(job_progress_url, :get)
+      parsed_json = JSON.parse(build_response)
+      puts "   Final JSON: " + parsed_json
       if build_result == 'SUCCESS'
           puts 'DDL validation with SUCCESS status!'
       elsif timeout_countdown == 0
