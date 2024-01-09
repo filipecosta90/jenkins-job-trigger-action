@@ -121,8 +121,7 @@ module Jenkins
       time = Time.new
       puts time.inspect + "... Finished waiting for job status..."
       build_response = perform_request(job_progress_url, :get)
-      parsed_json = JSON.parse(build_response)
-      puts "   Final JSON: " + parsed_json
+      puts "   Final JSON: " + build_response
       if build_result == 'SUCCESS'
           puts 'DDL validation with SUCCESS status!'
       elsif timeout_countdown == 0
